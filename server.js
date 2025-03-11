@@ -20,12 +20,18 @@ app.get('/', (req, res) => {
 // 
 socketio.on('connection', (socket) => {
   socket.on('message', (msg) => {
-    if (msg.includes('/date')) {
-      const cmd = msg.substring(msg.indexOf('/') + 1);
-      const cmdResponse = cp.execSync(cmd).toString();
-      socketio.emit('message', cmdResponse);
+    if (msg.trim() === '/date') {
+      const child = spawn('date', []);
+  
+      child.stdout.on('data', (data) => {
+        socket.emit('message', data.toString());
+      });
+  
+      child.stderr.on('data', (data) => {
+        socket.emit('message', 'Erreur : ' + data.toString());
+      });
     } else {
-      socketio.emit('message', msg);
+      socket.emit('message', msg);
     }
   });
 });
